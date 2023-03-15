@@ -66,33 +66,34 @@ class BackTester(object):
         for key in data:
             print(f"{key}: {data[key]}")
     
-    # Quickstart with vectorbt
-    def vectorBtQuickStart(self):
-        # prints ticker data given range of dates
-        # Max interval is 1m for 7 days, 15m for 60 days, etc.
-        ticker_price = vbt.YFData.download([self.ticker], interval = "1m", start = self.start, end = self.end).get('Close')
-        print(ticker_price)
-
-
-        # whatever the window is, the first of those days will be NaN
-        rsi = vbt.RSI.run(ticker_price, window =[14, 21])
+    # This function will take close prices and return a list of the RSI values for each day.
+    def customIndicator(self, close, rsi_window = 14, ma_window = 50):
+        # Relative strength index based on closing prices
+        rsi = vbt.RSI.run(close, window = [rsi_window])
+        ma = vbt.MA.run(close, window = [ma_window])
         rsiValue = rsi.rsi
+        return rsiValue
 
+    # This function will take the custom indicator function and return a list of the RSI values for each day.
+    def indicatorFact(self):
+        ticker_prices = vbt.YFData.download([self.ticker], missing_index = 'drop', start = self.start, end = self.end, interval = "1m").get('Close')
+        # indicator factory
+        indicator = vbt.IndicatorFactory(
+            class_name = "Combination",
+            short_name = "comb",
+            input_names = ["close"],
+            param_names = ["rsi_window", "ma_window"],
+            output_names = ["value"]
+        ).from_apply_func(
+            self.customIndicator,
+            window = 14
+        )
+        comb = indicator.run(ticker_prices, window = 21)
+        print(comb.value)
+        return comb.value
 
-        # only give a value of true if the rsi is crossed above or below 30
-        entries = rsi.rsi_crossed_below(30)
-
-        # only give a value of true if the rsi is crossed above or below 70
-        exits = rsi.rsi_crossed_above(70)
-        
-        pf = vbt.Portfolio.from_signals(ticker_price, entries, exits, freq='1D')
     
-    def customIndicator(self, window = 14):
-        ticker_prices = vbt.YFData.download([self.ticker], missing_index = 'drop', interval = "1m", start = self.start, end = datetime.datetime.now()).get('Close')
-        print(ticker_prices)
-    
-    
 
 
-test = BackTester("AAPL", "2023-03-11", "2023-03-15")
-print(test.customIndicator())
+test = BackTester("AAPL", "2023-03-09", "2023-03-16")
+test.indicatorFact()
