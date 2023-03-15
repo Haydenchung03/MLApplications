@@ -7,3 +7,5 @@ python-decouple==3.8
 scikit_learn==1.2.2
 tensorflow==2.11.0
 tensorflow_intel==2.11.0
+vectorbt==0.24.5
+yfinance==0.2.12
