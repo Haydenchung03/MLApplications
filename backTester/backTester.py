@@ -10,13 +10,6 @@ import matplotlib.pyplot as plt
 import vectorbt as vbt
 import yfinance as yf
 
-import keras 
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM
-
-
 from alpha_vantage.timeseries import TimeSeries
 from decouple import config
 import datetime
