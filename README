@@ -6,3 +6,5 @@ To get started, set up a virtual machine, activate virtual machine and install t
 1. python -m venv venv
 2. venv\Scripts\activate
 3. pip install -r requirements.txt
+
+Set up https://www.alphavantage.co/ API key and add a .env file with your api key with the variable: ALPHA_ADVANTAGE
