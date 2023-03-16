@@ -66,17 +66,23 @@ class BackTester(object):
         for key in data:
             print(f"{key}: {data[key]}")
     
-    # This function will take close prices and return a list of the RSI values for each day.
+    # This function will take close prices and return a list of the RSI values for each day. Windows are considered "candles"
+
     def customIndicator(self, close, rsi_window = 14, ma_window = 50):
         # Relative strength index based on closing prices
-        rsi = vbt.RSI.run(close, window = [rsi_window])
-        ma = vbt.MA.run(close, window = [ma_window])
-        rsiValue = rsi.rsi
-        return rsiValue
+        rsi = vbt.RSI.run(close, window = [rsi_window]).rsi.to_numpy()
+        # Moving average based on closing prices
+        ma = vbt.MA.run(close, window = [ma_window]).ma.to_numpy()
+
+        # If it is above 70, exit the position. If it is below 30, enter the position. If it is between 30 and 70, do nothing. 
+        # Only buy if the closing price is below the moving average.
+        trend = np.where(rsi > 70, -1, 0)
+        trend = np.where((rsi < 30) & (close < ma), 1, trend)
+        return trend
 
     # This function will take the custom indicator function and return a list of the RSI values for each day.
-    def indicatorFact(self):
-        ticker_prices = vbt.YFData.download([self.ticker], missing_index = 'drop', start = self.start, end = self.end, interval = "1m").get('Close')
+    def indicatorFact(self, arrOfTickers, startDate, endDate):
+        ticker_prices = vbt.YFData.download(arrOfTickers, missing_index = 'drop', start = startDate, end = endDate, interval = "1m").get('Close')
         # indicator factory
         indicator = vbt.IndicatorFactory(
             class_name = "Combination",
@@ -86,14 +92,25 @@ class BackTester(object):
             output_names = ["value"]
         ).from_apply_func(
             self.customIndicator,
-            window = 14
+            rsi_window = 14,
+            ma_window = 50
         )
-        comb = indicator.run(ticker_prices, window = 21)
-        print(comb.value)
-        return comb.value
+        # Testing out the function above
+        comb = indicator.run(ticker_prices, rsi_window = 21, ma_window = 50)
+        # Entries and exits that returns a boolean value
+        entries = comb.value == 1.0
+        exits = comb.value == -1.0
+
+        portfolio = vbt.Portfolio.from_signals(ticker_prices, entries, exits)
+        # print(portfolio.stats()) #Prints stats for tickers as a whole
+        print(portfolio.total_return())  # returns a percentage of total returns and losses for each ticker
+        return comb.value.to_string()
 
     
 
 
 test = BackTester("AAPL", "2023-03-09", "2023-03-16")
-test.indicatorFact()
+# if it returns 0, nothing happens. If it returns 1, buy. If it returns -1, sell.
+test.indicatorFact(["MSFT", "AAPL", "IBM"], "2023-03-09", "2023-03-16")
+#print(test.indicatorFact())
+
