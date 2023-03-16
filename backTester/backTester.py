@@ -81,7 +81,7 @@ class BackTester(object):
         return trend
 
     # This function will take the custom indicator function and return a list of the RSI values for each day.
-    def indicatorFact(self, arrOfTickers, startDate, endDate):
+    def indicatorFactory(self, arrOfTickers, startDate, endDate):
         ticker_prices = vbt.YFData.download(arrOfTickers, missing_index = 'drop', start = startDate, end = endDate, interval = "1m").get('Close')
         # indicator factory
         indicator = vbt.IndicatorFactory(
@@ -111,6 +111,6 @@ class BackTester(object):
 
 test = BackTester("AAPL", "2023-03-09", "2023-03-16")
 # if it returns 0, nothing happens. If it returns 1, buy. If it returns -1, sell.
-test.indicatorFact(["MSFT", "AAPL", "IBM"], "2023-03-09", "2023-03-16")
+test.indicatorFactory(["MSFT", "AAPL", "IBM"], "2023-03-09", "2023-03-16")
 #print(test.indicatorFact())
 
