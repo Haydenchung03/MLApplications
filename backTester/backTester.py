@@ -131,7 +131,27 @@ class BackTester(object):
             # Testing out the function above
             comb = indicator.run(ticker_prices, rsi_window = 21, ma_window = 50)
             return [ticker_prices, comb]
-        
+
+        def indicatorFactoryScores(self):
+            ticker_prices = vbt.YFData.download(self.tickers, missing_index = 'drop', start = self.start, end = self.end, interval = "1m").get('Close')
+            # indicator factory
+            indicator = vbt.IndicatorFactory(
+                class_name = "Combination",
+                short_name = "comb",
+                input_names = ["close"],
+                param_names = ["rsi_window", "ma_window"],
+                output_names = ["rsi", "ma"]
+            ).from_apply_func(
+                self.customIndicator,
+                rsi_window = 14,
+                ma_window = 50,
+                keep_pd = True
+            )
+            comb = indicator.run(ticker_prices, rsi_window = 21, ma_window = 50)
+            # 0 means do nothing, 1 means buy, -1 means sell. Based on the RSI values and the moving average.
+            # return comb as a pandas dataframe
+            return [comb.rsi, comb.ma]
+            
         # This returns a percentage of total returns and losses for each ticker
         def portfolioStats(self):
             indicatoryInfo = self.indicatorFactory()
@@ -152,7 +172,7 @@ class BackTester(object):
             return comb.value.to_string()
         
         # This function prints out the raw data for each ticker given a time interval, start date, and end date
-        def printRawPrices(self):
+        def getRawPrices(self):
             indicatoryInfo = self.indicatorFactory()
             ticker_prices = indicatoryInfo[0]
             return ticker_prices.to_string()
