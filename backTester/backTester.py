@@ -130,7 +130,7 @@ class BackTester(object):
             )
             # Testing out the function above
             comb = indicator.run(ticker_prices, rsi_window = 21, ma_window = 50)
-            return [ticker_prices, comb]
+            return [ticker_prices, comb.value]
 
         def indicatorFactoryScores(self):
             ticker_prices = vbt.YFData.download(self.tickers, missing_index = 'drop', start = self.start, end = self.end, interval = "1m").get('Close')
@@ -181,7 +181,7 @@ class BackTester(object):
         def getRawData(self):
             indicatoryInfo = self.indicatorFactory()
             comb = indicatoryInfo[1]
-            return comb.value.to_string()
+            return comb
 
     
 
