@@ -72,11 +72,20 @@ class BackTester(object):
             self.start = start
             self.end = end
 
-         # This function will take close prices and return a list of the RSI values for each day. Windows are considered "candles"
+        # This function will take close prices and return a list of the RSI values for each day. Windows are considered "candles"
 
         def customIndicator(self, close, rsi_window = 14, ma_window = 50):
-            # Relative strength index based on closing prices
-            rsi = vbt.RSI.run(close, window = [rsi_window]).rsi.to_numpy()
+            # Resample the data to 5 minute intervals and take the last value of each interval.
+            close_5m = close.resample('5min').last()
+            # Relative strength index
+            rsi = vbt.RSI.run(close_5m, window = [rsi_window]).rsi
+            # Align the RSI values with the data sets. Example(Lines up minute data with 5 min data.) 
+            # Forwards fill the RSI values if there is no data for that candle.
+            # This means that the rsi and close values will be in the exact same size
+            rsi, _ = rsi.align(close, broadcast_axis = 0, method = 'ffill', join = 'right')
+            
+            close = close.to_numpy()
+            rsi = rsi.to_numpy()
             # Moving average based on closing prices
             ma = vbt.MA.run(close, window = [ma_window]).ma.to_numpy()
 
@@ -85,6 +94,7 @@ class BackTester(object):
             trend = np.where(rsi > 70, -1, 0)
             trend = np.where((rsi < 30) & (close < ma), 1, trend)
             return trend
+            
 
         # This function will take the custom indicator function and return a list of the RSI values for each day.
         def indicatorFactory(self):
@@ -99,7 +109,8 @@ class BackTester(object):
             ).from_apply_func(
                 self.customIndicator,
                 rsi_window = 14,
-                ma_window = 50
+                ma_window = 50,
+                keep_pd = True
             )
             # Testing out the function above
             comb = indicator.run(ticker_prices, rsi_window = 21, ma_window = 50)
@@ -127,5 +138,6 @@ class BackTester(object):
     
 
 
-test = BackTester.VectorBT(["MSFT", "AAPL", "IBM"], "2023-03-10", "2023-03-17")
+test = BackTester.VectorBT(["MSFT", "AAPL"], "2023-03-10", "2023-03-17")
 print(test.indicatorValues())
+print(test.portfolioStats())
