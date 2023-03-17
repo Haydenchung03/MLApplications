@@ -74,7 +74,7 @@ class BackTester(object):
 
         # This function will take close prices and return a list of the RSI values for each day. Windows are considered "candles"
 
-        def customIndicator(self, close, rsi_window = 14, ma_window = 50):
+        def customIndicatorTrends(self, close, rsi_window = 14, ma_window = 50):
             # Resample the data to 5 minute intervals and take the last value of each interval.
             close_5m = close.resample('5min').last()
             # Relative strength index
@@ -94,7 +94,23 @@ class BackTester(object):
             trend = np.where(rsi > 70, -1, 0)
             trend = np.where((rsi < 30) & (close < ma), 1, trend)
             return trend
+        
+        # THis function returns a list a list of rsi and ma values for each day.
+        def customIndicator(self, close, rsi_window = 14, ma_window = 50):
+                # Resample the data to 5 minute intervals and take the last value of each interval.
+            close_5m = close.resample('5min').last()
+            # Relative strength index
+            rsi = vbt.RSI.run(close_5m, window = [rsi_window]).rsi
+            # Align the RSI values with the data sets. Example(Lines up minute data with 5 min data.) 
+            # Forwards fill the RSI values if there is no data for that candle.
+            # This means that the rsi and close values will be in the exact same size
+            rsi, _ = rsi.align(close, broadcast_axis = 0, method = 'ffill', join = 'right')
             
+            close = close.to_numpy()
+            rsi = rsi.to_numpy()
+            # Moving average based on closing prices
+            ma = vbt.MA.run(close, window = [ma_window]).ma.to_numpy()
+            return [rsi, ma]
 
         # This function will take the custom indicator function and return a list of the RSI values for each day.
         def indicatorFactory(self):
@@ -107,7 +123,7 @@ class BackTester(object):
                 param_names = ["rsi_window", "ma_window"],
                 output_names = ["value"]
             ).from_apply_func(
-                self.customIndicator,
+                self.customIndicatorTrends,
                 rsi_window = 14,
                 ma_window = 50,
                 keep_pd = True
@@ -134,10 +150,20 @@ class BackTester(object):
             comb = indicatoryInfo[1]
             # 0 means do nothing, 1 means buy, -1 means sell. Based on the RSI values and the moving average.
             return comb.value.to_string()
+        
+        # This function prints out the raw data for each ticker given a time interval, start date, and end date
+        def printRawPrices(self):
+            indicatoryInfo = self.indicatorFactory()
+            ticker_prices = indicatoryInfo[0]
+            return ticker_prices.to_string()
+        
+        # This function prints out the raw data for each ticker given a time interval, start date, and end date
+        def getRawData(self):
+            indicatoryInfo = self.indicatorFactory()
+            comb = indicatoryInfo[1]
+            return comb.value.to_string()
 
     
 
 
 test = BackTester.VectorBT(["MSFT", "AAPL"], "2023-03-10", "2023-03-17")
-print(test.indicatorValues())
-print(test.portfolioStats())
