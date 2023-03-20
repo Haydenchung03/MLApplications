@@ -67,10 +67,11 @@ class BackTester(object):
                 print(f"{key}: {data[key]}")
     
     class VectorBT(object):
-        def __init__(self, ticker, start, end):
+        def __init__(self, ticker, start, end, interval):
             self.tickers = ticker
             self.start = start
             self.end = end
+            self.interval = interval
 
         # This function will take close prices and return a list of the RSI values for each day. Windows are considered "candles"
 
@@ -114,7 +115,7 @@ class BackTester(object):
 
         # This function will take the custom indicator function and return a list of the RSI values for each day.
         def indicatorFactory(self):
-            ticker_prices = vbt.YFData.download(self.tickers, missing_index = 'drop', start = self.start, end = self.end, interval = "1m").get('Close')
+            ticker_prices = vbt.YFData.download(self.tickers, missing_index = 'drop', start = self.start, end = self.end, interval = self.interval).get('Close')
             # indicator factory
             indicator = vbt.IndicatorFactory(
                 class_name = "Combination",
@@ -133,7 +134,7 @@ class BackTester(object):
             return [ticker_prices, comb.value]
 
         def indicatorFactoryScores(self):
-            ticker_prices = vbt.YFData.download(self.tickers, missing_index = 'drop', start = self.start, end = self.end, interval = "1m").get('Close')
+            ticker_prices = vbt.YFData.download(self.tickers, missing_index = 'drop', start = self.start, end = self.end, interval = self.interval).get('Close')
             # indicator factory
             indicator = vbt.IndicatorFactory(
                 class_name = "Combination",
@@ -169,7 +170,7 @@ class BackTester(object):
             indicatoryInfo = self.indicatorFactory()
             comb = indicatoryInfo[1]
             # 0 means do nothing, 1 means buy, -1 means sell. Based on the RSI values and the moving average.
-            return comb.value.to_string()
+            return comb.values
         
         # This function prints out the raw data for each ticker given a time interval, start date, and end date
         def getRawPrices(self):
@@ -183,7 +184,11 @@ class BackTester(object):
             comb = indicatoryInfo[1]
             return comb
 
+
+
     
 
 
-test = BackTester.VectorBT(["MSFT", "AAPL"], "2023-03-10", "2023-03-17")
+test = BackTester.VectorBT(["MSFT", "AAPL"], "2020-03-14", "2023-03-21", "1d")
+print(test.getRawPrices())
+
