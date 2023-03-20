@@ -1,17 +1,21 @@
-import pandas as pd
-from matplotlib import pyplot
 from pandas import set_option
 from sys import path
 from os import getcwd
 path.append(getcwd())
-import backTester as backTester
+import backTester.backTester as backTester
 import vectorbt as vbt
-import seaborn as sns
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
+
+#Function and modules for data preparation and visualization
+import numpy as np
+import pandas as pd
+import pandas_datareader.data as web
+
 class machineLearning(object):
     
     def __init__(self, tickers, start, end):
+        self.tickers = tickers
+        self.start = start
+        self.end = end
         self.vectorBT = backTester.BackTester.VectorBT(tickers, start, end)
 
     def returnDataStatistics(self):
@@ -31,7 +35,20 @@ class machineLearning(object):
         #print(''' Summarizing buy/sell signal trends for each ticker''')
         print(data[1].describe())
         return data[1].describe()
-    
-    
 
-data1 = machineLearning(["MSFT", "AAPL"], "2023-03-10", "2023-03-17")
+    def predictStockPrice(self, exchangeRates_prices, index_tickers):
+        getDayData = []
+        for i in range(len(self.tickers)):
+            getDayData.append(backTester.BackTester.AlphaVantage(self.tickers[i], self.start, self.end).getDayData())
+        
+        getDayData = pd.DataFrame(getDayData)
+        
+
+        ccy_data = web.DataReader(exchangeRates_prices, 'fred', start = self.start, end = self.end)
+        idx_data = web.DataReader(index_tickers, 'fred', start = self.start, end = self.end)
+        print(getDayData.to_string())
+
+
+machineLearning(['MSFT', 'AAPL'], "2023-03-05", "2023-03-17").predictStockPrice(['DEXJPUS', 'DEXUSUK'], ['SP500', 'DJIA', 'VIXCLS'])
+
+

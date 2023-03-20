@@ -31,7 +31,7 @@ class BackTester(object):
         def getDayData(self):
             data = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={self.ticker}&outputsize=full&apikey={self.key}"
             data = pd.read_json(data)
-            returnData = {}
+            returnData = []
             
             startYear = int(self.start[0:4])
             startMonth = int(self.start[5:7])
