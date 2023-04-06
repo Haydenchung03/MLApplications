@@ -176,7 +176,7 @@ class BackTester(object):
         def getRawPrices(self):
             indicatoryInfo = self.indicatorFactory()
             ticker_prices = indicatoryInfo[0]
-            return ticker_prices.to_string()
+            return ticker_prices
         
         # This function prints out the raw data for each ticker given a time interval, start date, and end date
         def getRawData(self):
@@ -191,4 +191,3 @@ class BackTester(object):
 
 test = BackTester.VectorBT(["MSFT", "AAPL"], "2020-03-14", "2023-03-21", "1d")
 print(test.getRawPrices())
-

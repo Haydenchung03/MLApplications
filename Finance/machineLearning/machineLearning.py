@@ -6,17 +6,20 @@ import backTester.backTester as backTester
 import vectorbt as vbt
 
 #Function and modules for data preparation and visualization
+# pandas, pandas_datareader, numpy and matplotlib
 import numpy as np
 import pandas as pd
 import pandas_datareader.data as web
+from matplotlib import pyplot
 
 class machineLearning(object):
     
-    def __init__(self, tickers, start, end):
+    def __init__(self, tickers, start, end, interval):
         self.tickers = tickers
         self.start = start
         self.end = end
-        self.vectorBT = backTester.BackTester.VectorBT(tickers, start, end)
+        self.interval = interval
+        self.vectorBT = backTester.BackTester.VectorBT(tickers, start, end, interval)
 
     def returnDataStatistics(self):
 
@@ -37,18 +40,13 @@ class machineLearning(object):
         return data[1].describe()
 
     def predictStockPrice(self, exchangeRates_prices, index_tickers):
-        getDayData = []
-        for i in range(len(self.tickers)):
-            getDayData.append(backTester.BackTester.AlphaVantage(self.tickers[i], self.start, self.end).getDayData())
         
-        getDayData = pd.DataFrame(getDayData)
-        
-
+        stx_data = self.vectorBT.getRawPrices()
+    
         ccy_data = web.DataReader(exchangeRates_prices, 'fred', start = self.start, end = self.end)
         idx_data = web.DataReader(index_tickers, 'fred', start = self.start, end = self.end)
-        print(getDayData.to_string())
 
 
-machineLearning(['MSFT', 'AAPL'], "2023-03-05", "2023-03-17").predictStockPrice(['DEXJPUS', 'DEXUSUK'], ['SP500', 'DJIA', 'VIXCLS'])
+machineLearning(['MSFT', 'AAPL'], "2023-03-13", "2023-03-18", "1m").predictStockPrice(['DEXJPUS', 'DEXUSUK'], ['SP500', 'DJIA', 'VIXCLS'])
 
 
